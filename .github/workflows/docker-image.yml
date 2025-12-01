@@ -24,6 +24,7 @@ jobs:
       - name: Run new container
         run: |
           podman run -d \
+            --cgroup-parent=/ \
             --name myapp \
             -p 1201:80 \
             myapp:latest
