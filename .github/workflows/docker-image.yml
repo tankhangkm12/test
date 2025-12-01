@@ -1,18 +1,29 @@
-name: Docker Image CI
+name: Podman CI/CD on Fedora Server
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
-
-  build:
-
-    runs-on: ubuntu-latest
+  build_and_deploy:
+    runs-on: self-hosted # Dùng runner của Fedora VM
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: podman build . --file Dockerfile --tag my-image-name:$(date +%s)
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build Podman image
+        run: podman build -t myapp:latest .
+
+      - name: Stop old container
+        run: podman stop myapp || true
+
+      - name: Remove old container
+        run: podman rm myapp || true
+
+      - name: Run new container
+        run: |
+          podman run -d \
+            --name myapp \
+            -p 80:80 \
+            myapp:latest
