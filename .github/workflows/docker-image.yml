@@ -1,4 +1,4 @@
-name: Podman CI/CD on Fedora Server
+name: docker CI/CD on Fedora Server
 
 on:
   push:
@@ -12,19 +12,18 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Build Podman image
-        run: podman build -t myapp:latest .
+      - name: Build docker image
+        run: docker build -t myapp:latest .
 
       - name: Stop old container
-        run: podman stop myapp || true
+        run: docker stop myapp || true
 
       - name: Remove old container
-        run: podman rm myapp || true
+        run: docker rm myapp || true
 
       - name: Run new container
         run: |
-          podman run -d \
-            --cgroup-parent=/ \
+          docker run -d \
             --name myapp \
             -p 1201:80 \
             myapp:latest
