@@ -1,19 +1,44 @@
-name: docker CI/CD on Fedora Server
+name: Docker CI/CD on Fedora Server
 
 on:
   push:
     branches: ["main"]
+    tags: ["*"]
 
 jobs:
-  build_and_deploy:
-    runs-on: self-hosted # Dùng runner của Fedora VM
+  build:
+    runs-on: self-hosted
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Build docker image
+      - name: Build Docker image
         run: docker build -t myapp:latest .
+
+      - name: Save artifact image (optional)
+        run: docker save myapp:latest -o myapp.tar
+
+      # Nếu bạn muốn dùng artifact giữa jobs
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: myapp-image
+          path: myapp.tar
+
+  deploy:
+    runs-on: self-hosted
+    needs: build # phải build xong trước
+    if: startsWith(github.ref, 'refs/tags/') # điều kiện chỉ chạy khi có tag
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: myapp-image
+
+      - name: Load Docker image
+        run: docker load -i myapp.tar
 
       - name: Stop old container
         run: docker stop myapp || true
